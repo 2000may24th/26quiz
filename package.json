@@ -1,6 +1,7 @@
 {
   "name": "alpha-num-quiz",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@netlify/blobs": "^7.3.0"
   }
