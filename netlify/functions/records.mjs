@@ -17,7 +17,6 @@ export default async (req) => {
             record.timestamp = Date.now();
             records.push(record);
             
-            // setJSON 대신 문자열로 변환하여 안전하게 set
             await store.set("all_records", JSON.stringify(records));
             
             return new Response(JSON.stringify({ success: true }), { 
@@ -37,7 +36,7 @@ export default async (req) => {
                 if (dataStr) allRecords = JSON.parse(dataStr); 
             } catch(e) {}
 
-            // 특정 유저의 기록 조회
+            // 1. 특정 유저의 기록 조회
             if (userId) {
                 const userRecords = allRecords
                     .filter(r => r.userId === userId)
@@ -47,7 +46,7 @@ export default async (req) => {
                 });
             }
 
-            // 전체 리더보드 (모드별 1인당 최고 기록 1개)
+            // 2. 특정 모드의 리더보드 (1인당 최고 기록 1개씩 필터링)
             if (mode) {
                 const modeRecords = allRecords.filter(r => r.modeKey === mode);
                 const bestPerUser = {};
@@ -75,7 +74,10 @@ export default async (req) => {
                 });
             }
 
-            return new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } });
+            // 3. 🌟 수정된 부분: 특정 조건이 없을 경우 빈 배열이 아닌 전체 기록 반환
+            return new Response(JSON.stringify(allRecords), { 
+                status: 200, headers: { "Content-Type": "application/json" } 
+            });
         }
     } catch (error) {
         console.error("서버 에러:", error);
