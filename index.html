@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>알파벳-숫자 스피드 퀴즈 (온라인)</title>
+    <title>알파벳-숫자 스피드 퀴즈</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
         * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
         body { margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; padding: 20px; position: relative; }
         
-        /* 로그인 UI (우측 상단) */
+        /* 로그인 UI */
         .top-right-auth { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; backdrop-filter: blur(10px); }
         .auth-input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100px; outline: none;}
         .auth-btn { padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .auth-btn:hover { filter: brightness(1.1); }
         .auth-btn.logout { background: #fc8181; }
 
-        /* 메인 컨테이너 및 기타 UI */
+        /* 메인 UI */
         .container { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.5); padding: 30px; border-radius: 24px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15); width: 100%; max-width: 600px; text-align: center; position: relative; }
         h1 { font-size: 24px; color: #2c3e50; margin-bottom: 25px; }
         .screen { display: none; flex-direction: column; gap: 15px; }
@@ -26,19 +26,23 @@
         label { font-weight: 600; color: #555; font-size: 14px; margin-bottom: -5px; }
         select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 15px; }
         
-        /* 버튼 묶음 */
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .row-btns { display: flex; gap: 10px; }
         button.main-btn { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
         button.sub-btn { flex: 1; background: #cbd5e0; color: #1a202c; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         
-        /* 게임 UI */
+        /* 게임 화면 */
         .stats { display: flex; justify-content: space-between; background: white; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; }
         .question-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
         .q-box { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; background: white; border-radius: 12px; font-size: 24px; font-weight: 800; }
         input[type="text"].game-input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #cbd5e0; border-radius: 12px; text-align: center; outline: none; }
         .helper-text { font-size: 12px; color: #718096; }
         
+        /* 학습 탭 (복구됨!) */
+        .learning-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 400px; overflow-y: auto; padding: 5px; margin-bottom: 10px; }
+        .learn-item { background: white; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 16px; color: #2b6cb0; display: flex; justify-content: space-between; border: 1px solid #e2e8f0; }
+        .learn-item span { color: #e53e3e; }
+
         /* 리더보드 */
         .tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; }
         .tab { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; color: #a0aec0; }
@@ -69,7 +73,7 @@
 
 <div class="container">
     <div id="setup-screen" class="screen active">
-        <h1>🅰️ 스피드 매칭 퀴즈 💯</h1>
+        <h1>🅰️ MSC 취업 기원 스피드 매칭 퀴즈 💯</h1>
         <div class="options">
             <label>문제 유형</label>
             <select id="quiz-type">
@@ -87,10 +91,16 @@
         <div class="btn-group">
             <button class="main-btn" onclick="startGame()">게임 시작</button>
             <div class="row-btns">
-                <button class="sub-btn" onclick="switchScreen('learning-screen')">학습 탭</button>
+                <button class="sub-btn" onclick="openLearningScreen()">학습 탭</button>
                 <button class="sub-btn" onclick="openLeaderboard()">리더보드</button>
             </div>
         </div>
+    </div>
+
+    <div id="learning-screen" class="screen">
+        <h1>📖 알파벳-숫자 매칭표</h1>
+        <div class="learning-grid" id="learning-grid"></div>
+        <button class="sub-btn" onclick="switchScreen('setup-screen')">메인으로 돌아가기</button>
     </div>
 
     <div id="game-screen" class="screen">
@@ -157,6 +167,20 @@
     const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     const switchScreen = (id) => { screens.forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
 
+    // --- 학습 탭 렌더링 (복구됨!) ---
+    function openLearningScreen() {
+        const grid = document.getElementById('learning-grid');
+        if (grid.innerHTML === '') {
+            for (let i = 1; i <= 26; i++) {
+                const div = document.createElement('div');
+                div.className = 'learn-item';
+                div.innerHTML = `${String.fromCharCode(i + 64)} <span>${i}</span>`;
+                grid.appendChild(div);
+            }
+        }
+        switchScreen('learning-screen');
+    }
+
     // --- 인증 (로그인/가입) ---
     const updateAuthUI = () => {
         if (currentUser) {
@@ -179,29 +203,18 @@
         }
 
         try {
-            const res = await fetch('/.netlify/functions/auth', {
-                method: 'POST',
-                body: JSON.stringify({ action, id, pin })
-            });
+            const res = await fetch('/.netlify/functions/auth', { method: 'POST', body: JSON.stringify({ action, id, pin }) });
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.error);
             
-            currentUser = id;
-            localStorage.setItem('quizUserId', id);
+            currentUser = id; localStorage.setItem('quizUserId', id);
             alert(action === 'login' ? "로그인 되었습니다." : "가입 및 로그인 되었습니다.");
             updateAuthUI();
-        } catch (e) {
-            alert(e.message);
-        }
+        } catch (e) { alert(e.message); }
     }
 
-    function logout() {
-        currentUser = null;
-        localStorage.removeItem('quizUserId');
-        updateAuthUI();
-    }
-    updateAuthUI(); // 초기 실행
+    function logout() { currentUser = null; localStorage.removeItem('quizUserId'); updateAuthUI(); }
+    updateAuthUI();
 
     // --- 게임 로직 ---
     function startGame() {
@@ -209,28 +222,17 @@
         const modeVal = document.getElementById('game-mode').value;
         [currentMode, limitValue] = modeVal.split('-');
         limitValue = parseInt(limitValue);
-        elapsed = attempts = corrects = 0;
-        answerInput.value = '';
+        elapsed = attempts = corrects = 0; answerInput.value = '';
 
-        document.getElementById('helper-msg').textContent = currentType === 'num2alpha' 
-            ? "알파벳 4글자를 이어서 입력하세요." 
-            : "숫자를 띄어쓰기로 구분하고 Enter를 누르세요.";
-
-        switchScreen('game-screen');
-        generateQuestion();
-        updateStats();
-        answerInput.focus();
+        document.getElementById('helper-msg').textContent = currentType === 'num2alpha' ? "알파벳 4글자를 이어서 입력하세요." : "숫자를 띄어쓰기로 구분하고 Enter를 누르세요.";
+        switchScreen('game-screen'); generateQuestion(); updateStats(); answerInput.focus();
 
         if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            elapsed++; updateStats();
-            if (currentMode === 'time' && elapsed >= limitValue) endGame();
-        }, 1000);
+        timerInterval = setInterval(() => { elapsed++; updateStats(); if (currentMode === 'time' && elapsed >= limitValue) endGame(); }, 1000);
     }
 
     function generateQuestion() {
-        expectedAnswers = [];
-        answerInput.value = '';
+        expectedAnswers = []; answerInput.value = '';
         qBoxes.forEach(box => {
             box.classList.remove('correct-flash');
             const num = Math.floor(Math.random() * 26) + 1;
@@ -252,9 +254,7 @@
     }
 
     function checkAnswer() {
-        const val = answerInput.value;
-        let isCorrect = false;
-
+        const val = answerInput.value; let isCorrect = false;
         if (currentType === 'num2alpha') {
             const cleanVal = val.replace(/[^a-zA-Z]/g, '').toUpperCase();
             if (cleanVal === expectedAnswers.map(n => String.fromCharCode(n + 64)).join('')) isCorrect = true;
@@ -265,25 +265,15 @@
 
         attempts++;
         if (isCorrect) {
-            corrects++;
-            answerInput.classList.remove('wrong');
-            qBoxes.forEach(box => box.classList.add('correct-flash'));
-            setTimeout(() => {
-                if (currentMode === 'count' && corrects >= limitValue) endGame();
-                else generateQuestion();
-            }, 150);
+            corrects++; answerInput.classList.remove('wrong'); qBoxes.forEach(box => box.classList.add('correct-flash'));
+            setTimeout(() => { if (currentMode === 'count' && corrects >= limitValue) endGame(); else generateQuestion(); }, 150);
         } else {
-            answerInput.classList.remove('wrong');
-            void answerInput.offsetWidth;
-            answerInput.classList.add('wrong');
-            answerInput.value = ''; 
+            answerInput.classList.remove('wrong'); void answerInput.offsetWidth; answerInput.classList.add('wrong'); answerInput.value = ''; 
         }
         updateStats();
     }
 
-    answerInput.addEventListener('input', (e) => {
-        if (currentType === 'num2alpha' && e.target.value.replace(/[^a-zA-Z]/g, '').length === 4) checkAnswer();
-    });
+    answerInput.addEventListener('input', (e) => { if (currentType === 'num2alpha' && e.target.value.replace(/[^a-zA-Z]/g, '').length === 4) checkAnswer(); });
     answerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
 
     async function endGame() {
@@ -291,37 +281,25 @@
         const acc = attempts === 0 ? 0 : Math.round((corrects / attempts) * 100);
         const modeKey = `${currentType}_${currentMode}_${limitValue}`;
         
-        const recordData = {
-            modeKey, modeType: currentMode,
-            score: corrects, time: elapsed, accuracy: acc,
-            userId: currentUser || 'offline_user'
-        };
+        const recordData = { modeKey, modeType: currentMode, score: corrects, time: elapsed, accuracy: acc, userId: currentUser || 'offline_user' };
 
         // 오프라인 저장
         const localRecords = JSON.parse(localStorage.getItem('localRecords') || '[]');
         localRecords.push({...recordData, timestamp: Date.now()});
         localStorage.setItem('localRecords', JSON.stringify(localRecords));
 
-        // 온라인 연동 (로그인 시)
+        // 온라인 연동
         if (currentUser) {
-            fetch('/.netlify/functions/records', { method: 'POST', body: JSON.stringify(recordData) })
-            .catch(err => console.error("온라인 저장 실패:", err));
+            fetch('/.netlify/functions/records', { method: 'POST', body: JSON.stringify(recordData) }).catch(console.error);
         }
 
-        let html = currentMode === 'time' 
-            ? `<div>맞춘 개수: <b style="color:#667eea">${corrects}</b>개</div>`
-            : `<div>소요 시간: <b style="color:#667eea">${formatTime(elapsed)}</b></div>`;
+        let html = currentMode === 'time' ? `<div>맞춘 개수: <b style="color:#667eea">${corrects}</b>개</div>` : `<div>소요 시간: <b style="color:#667eea">${formatTime(elapsed)}</b></div>`;
         html += `<div>정답률: <b style="color:#667eea">${acc}%</b></div>`;
-        
-        document.getElementById('result-stats').innerHTML = html;
-        switchScreen('result-screen');
+        document.getElementById('result-stats').innerHTML = html; switchScreen('result-screen');
     }
 
     // --- 리더보드 로직 ---
-    function openLeaderboard() {
-        switchScreen('leaderboard-screen');
-        loadLeaderboard(currentLbMode);
-    }
+    function openLeaderboard() { switchScreen('leaderboard-screen'); loadLeaderboard(currentLbMode); }
 
     async function loadLeaderboard(targetMode) {
         currentLbMode = targetMode;
@@ -330,34 +308,21 @@
         
         const list = document.getElementById('record-list');
         list.innerHTML = '데이터 불러오는 중...';
-        const filterVal = filterSelect.value;
-        const isTime = filterVal.includes('time');
+        const filterVal = filterSelect.value; const isTime = filterVal.includes('time');
 
         let data = [];
         if (targetMode === 'offline') {
             const local = JSON.parse(localStorage.getItem('localRecords') || '[]');
-            data = local.filter(r => r.modeKey === filterVal)
-                        .sort((a,b) => isTime ? b.score - a.score : a.time - b.time);
+            data = local.filter(r => r.modeKey === filterVal).sort((a,b) => isTime ? b.score - a.score : a.time - b.time);
         } else {
-            try {
-                const res = await fetch(`/.netlify/functions/records?mode=${filterVal}`);
-                data = await res.json();
-            } catch (e) {
-                list.innerHTML = '서버 통신 실패'; return;
-            }
+            try { const res = await fetch(`/.netlify/functions/records?mode=${filterVal}`); data = await res.json(); } catch (e) { list.innerHTML = '서버 통신 실패'; return; }
         }
 
         if(data.length === 0) { list.innerHTML = '기록이 없습니다.'; return; }
-
         list.innerHTML = data.map((r, i) => `
             <div class="record-item">
-                <div>
-                    <b>${i+1}위.</b> ${targetMode === 'online' ? `<span class="user-id-link" onclick="viewUserHistory('${r.userId}')">${r.userId}</span>` : '내 기록'}
-                    <span style="color:#718096; font-size:12px;"> (정답률 ${r.accuracy}%)</span>
-                </div>
-                <div style="font-weight:bold; color:#2c3e50;">
-                    ${isTime ? `${r.score}개` : `${formatTime(r.time)}`}
-                </div>
+                <div><b>${i+1}위.</b> ${targetMode === 'online' ? `<span class="user-id-link" onclick="viewUserHistory('${r.userId}')">${r.userId}</span>` : '내 기록'} <span style="color:#718096; font-size:12px;"> (정답률 ${r.accuracy}%)</span></div>
+                <div style="font-weight:bold; color:#2c3e50;">${isTime ? `${r.score}개` : `${formatTime(r.time)}`}</div>
             </div>
         `).join('');
     }
@@ -365,28 +330,18 @@
     async function viewUserHistory(userId) {
         switchScreen('user-history-screen');
         document.getElementById('history-title').textContent = `🎮 ${userId}님의 기록`;
-        const list = document.getElementById('history-list');
-        list.innerHTML = '불러오는 중...';
+        const list = document.getElementById('history-list'); list.innerHTML = '불러오는 중...';
 
         try {
-            const res = await fetch(`/.netlify/functions/records?userId=${userId}`);
-            const data = await res.json();
-            
+            const res = await fetch(`/.netlify/functions/records?userId=${userId}`); const data = await res.json();
             if(data.length === 0) { list.innerHTML = '기록이 없습니다.'; return; }
-
             list.innerHTML = data.map(r => `
                 <div class="record-item" style="flex-direction:column; align-items:flex-start;">
                     <div style="font-size:12px; color:#a0aec0;">${new Date(r.timestamp).toLocaleString()}</div>
-                    <div>
-                        <b>[${typeModeNames[r.modeKey]}]</b> 
-                        ${r.modeType === 'time' ? `${r.score}개` : `${formatTime(r.time)} 소요`} 
-                        (정답률 ${r.accuracy}%)
-                    </div>
+                    <div><b>[${typeModeNames[r.modeKey]}]</b> ${r.modeType === 'time' ? `${r.score}개` : `${formatTime(r.time)} 소요`} (정답률 ${r.accuracy}%)</div>
                 </div>
             `).join('');
-        } catch (e) {
-            list.innerHTML = '기록을 불러오지 못했습니다.';
-        }
+        } catch (e) { list.innerHTML = '기록을 불러오지 못했습니다.'; }
     }
 </script>
 </body>
