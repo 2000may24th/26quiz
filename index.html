@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSC_26QUIZ</title>
+    <title>알파벳-숫자 스피드 퀴즈 (온라인)</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -52,13 +52,16 @@
         .a-box.wrong-partial { border-color: #fc8181; background-color: #fff5f5; animation: shake 0.3s ease; }
         .helper-text { font-size: 12px; color: #718096; margin-bottom: 10px; }
 
-        /* 가상 키보드 UI */
-        .vk-container { display: grid; gap: 6px; margin-top: 5px; }
-        .vk-num { grid-template-columns: repeat(7, 1fr); }
-        .vk-alpha { grid-template-columns: repeat(10, 1fr); }
-        .vk-btn { background: white; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px 0; font-weight: 800; font-size: 16px; cursor: pointer; color: #2d3748; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* 🌟 가상 키보드 UI (Grid / Flex 혼합 개편) */
+        .vk-container { margin-top: 5px; width: 100%; }
+        .vk-num { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .vk-alpha { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+        .vk-row { display: flex; justify-content: center; gap: 6px; width: 100%; }
+        
+        .vk-btn { flex: 1; background: white; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px 0; font-weight: 800; font-size: 16px; cursor: pointer; color: #2d3748; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .vk-btn:active { background: #e2e8f0; transform: scale(0.95); }
-        .vk-btn.bs { background: #fc8181; color: white; border: none; }
+        .vk-alpha .vk-btn { max-width: 45px; } /* 알파벳 버튼 너비 제한 */
+        .vk-btn.bs { background: #fc8181; color: white; border: none; max-width: 60px; } /* 지우기 버튼 스타일 */
         .vk-btn.bs:active { background: #e53e3e; }
 
         /* 학습 탭 & 리더보드 */
@@ -102,7 +105,7 @@
 
 <div class="container">
     <div id="main-screen" class="screen active">
-        <h1>🅰️ MSC 취준 대비 알파벳-숫자 스피드게임 💯</h1>
+        <h1>🅰️ 알파벳-숫자 스피드 매칭 💯</h1>
         <div class="btn-group">
             <button class="main-btn" onclick="switchScreen('single-setup-screen')">👤 1인 연습 모드</button>
             <button class="main-btn online-btn" onclick="openOnlineSetup()">🌐 온라인 경쟁 모드</button>
@@ -185,7 +188,7 @@
         
         <div id="helper-msg" class="helper-text"></div>
         
-        <div id="vk-container" class="vk-container"></div>
+        <div id="vk-container"></div>
         
         <div class="row-btns" style="margin-top: 15px;">
             <button class="sub-btn" onclick="cancelGame()">취소하고 나가기</button>
@@ -218,20 +221,16 @@
 </div>
 
 <script>
-    // --- 전역 상태 ---
     let currentUser = localStorage.getItem('quizUserId') || null;
     let isOnlineGame = false;
     let currentType, currentMode, limitValue;
     let expectedAnswers = [], timerInterval, elapsed = 0, attempts = 0, corrects = 0;
     
-    // 입력 관리 상태
     let userAnswers = [];
     let partialInput = "";
-
     let currentLbMode = 'offline';
     let cachedLeaderboardData = [];
 
-    // UI 엘리먼트
     const screens = document.querySelectorAll('.screen');
     const qBoxes = document.querySelectorAll('.q-box');
     const aBoxes = document.querySelectorAll('.a-box');
@@ -241,7 +240,6 @@
     const progressBar = document.getElementById('game-progress-bar');
     const progressContainer = document.getElementById('game-progress-container');
 
-    // Helper
     const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     const switchScreen = (id) => { screens.forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
     const getModeName = (modeKey) => {
@@ -310,7 +308,7 @@
         switchScreen('online-setup-screen');
     }
 
-    // 가상 키보드 렌더링
+    // 🌟 가상 키보드 렌더링 (플렉스 레이아웃 적용)
     function renderVirtualKeyboard() {
         vkContainer.innerHTML = '';
         if (currentType === 'alpha2num') {
@@ -329,18 +327,21 @@
             vkContainer.className = 'vk-container vk-alpha';
             const rows = [ 'QWERTYUIOP'.split(''), 'ASDFGHJKL'.split(''), 'ZXCVBNM'.split('') ];
             rows.forEach((row, rIdx) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'vk-row';
                 row.forEach(letter => {
                     const btn = document.createElement('button');
                     btn.className = 'vk-btn'; btn.textContent = letter;
                     btn.onclick = () => handleAlphaInput(letter);
-                    vkContainer.appendChild(btn);
+                    rowDiv.appendChild(btn);
                 });
                 if (rIdx === 2) {
                     const bs = document.createElement('button');
-                    bs.className = 'vk-btn bs'; bs.style.gridColumn = 'span 3'; bs.textContent = '⌫';
+                    bs.className = 'vk-btn bs'; bs.textContent = '⌫';
                     bs.onclick = handleBackspace;
-                    vkContainer.appendChild(bs);
+                    rowDiv.appendChild(bs);
                 }
+                vkContainer.appendChild(rowDiv);
             });
         }
     }
@@ -393,7 +394,6 @@
         }, 1000);
     }
 
-    // 🌟 게임 취소 로직
     function cancelGame() {
         if (confirm("게임을 취소하시겠습니까? 기록은 저장되지 않습니다.")) {
             if (timerInterval) clearInterval(timerInterval);
@@ -505,12 +505,7 @@
 
     document.addEventListener('keydown', (e) => {
         if (!document.getElementById('game-screen').classList.contains('active')) return;
-        
-        if (e.key === 'Backspace') {
-            e.preventDefault();
-            handleBackspace();
-            return;
-        }
+        if (e.key === 'Backspace') { e.preventDefault(); handleBackspace(); return; }
 
         if (currentType === 'num2alpha') {
             if (/^[a-zA-Z]$/.test(e.key)) handleAlphaInput(e.key);
@@ -585,7 +580,6 @@
         document.getElementById('result-stats').innerHTML = html; switchScreen('result-screen');
     }
 
-    // --- 리더보드 로직 ---
     function openLeaderboard() { 
         filterSelect.innerHTML = '<option value="">모드 선택중...</option>';
         switchScreen('leaderboard-screen'); loadLeaderboard(currentLbMode); 
