@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>알파벳-숫자 스피드 퀴즈</title>
+    <title>26QUIZ</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
         * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
-        body { margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; padding: 20px; position: relative; }
+        body { margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; padding: 20px; position: relative; overflow-x: hidden;}
         
         /* 로그인 UI */
         .top-right-auth { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; backdrop-filter: blur(10px); z-index: 100;}
-        .auth-input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100px; outline: none;}
-        .auth-btn { padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .auth-input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100px; outline: none; font-size: 14px;}
+        .auth-btn { padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .auth-btn:hover { filter: brightness(1.1); }
         .auth-btn.logout { background: #fc8181; }
 
@@ -24,21 +24,28 @@
         .screen.active { display: flex; animation: fadeIn 0.4s ease; }
         .options { display: flex; flex-direction: column; gap: 10px; text-align: left; }
         label { font-weight: 600; color: #555; font-size: 14px; margin-bottom: -5px; }
-        select, input[type="number"] { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 15px; outline: none;}
+        select, input[type="number"] { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 15px; outline: none; background: white;}
         
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .row-btns { display: flex; gap: 10px; }
         button.main-btn { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         button.online-btn { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        button.sub-btn { flex: 1; background: #cbd5e0; color: #1a202c; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        button.stop-btn { background: #fc8181; color: white; width: 100%; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: none; }
-        button:hover { transform: translateY(-2px); }
+        button.sub-btn { flex: 1; background: #cbd5e0; color: #1a202c; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;}
+        button.stop-btn { background: #fc8181; color: white; width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: none; font-size: 15px;}
+        button:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
-        /* 게임 화면 */
-        .stats { display: flex; justify-content: space-between; background: white; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; }
+        /* 게임 화면 및 진행률 바 */
+        .game-header { position: relative; padding-top: 15px; margin-bottom: 10px; }
+        .progress-container { width: 100%; height: 8px; background-color: #e0e0e0; border-radius: 4px; overflow: hidden; position: absolute; top: 0; left: 0; display: none; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #48bb78, #38a169); width: 0%; transition: width 0.3s ease, background-color 0.5s ease; }
+        .progress-bar.warning { background: linear-gradient(90deg, #f6e05e, #ecc94b); } /* 남은 시간 적을 때 황색 */
+        .progress-bar.danger { background: linear-gradient(90deg, #fc8181, #e53e3e); }  /* 거의 없을 때 적색 */
+
+        .stats { display: flex; justify-content: space-between; background: white; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .question-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
-        .q-box { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; background: white; border-radius: 12px; font-size: 24px; font-weight: 800; transition: 0.3s;}
-        input[type="text"].game-input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #cbd5e0; border-radius: 12px; text-align: center; outline: none; letter-spacing: 2px;}
+        .q-box { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; background: white; border-radius: 12px; font-size: 24px; font-weight: 800; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #2d3748;}
+        input[type="text"].game-input { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #cbd5e0; border-radius: 12px; text-align: center; outline: none; letter-spacing: 2px; transition: 0.2s; background: white;}
+        input[type="text"].game-input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
         .helper-text { font-size: 12px; color: #718096; }
         
         /* 학습 탭 */
@@ -48,16 +55,24 @@
 
         /* 리더보드 */
         .tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; color: #a0aec0; }
+        .tab { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; color: #a0aec0; font-size: 15px;}
         .tab.active { color: #667eea; border-bottom: 3px solid #667eea; margin-bottom: -2px; }
-        .record-container { background: white; border-radius: 12px; padding: 15px; max-height: 350px; overflow-y: auto; text-align: left; font-size: 14px; }
+        .record-container { background: white; border-radius: 12px; padding: 15px; max-height: 350px; overflow-y: auto; text-align: left; font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .record-item { border-bottom: 1px solid #edf2f7; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .record-item:last-child { border-bottom: none; }
         .user-id-link { color: #2b6cb0; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
+        /* 애니메이션 */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .wrong { background-color: #fff5f5 !important; border-color: #fc8181 !important; animation: shake 0.4s ease; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         .correct-flash { background-color: #f0fff4 !important; color: #38a169 !important; transform: scale(1.05); }
+
+        /* 스크롤바 스타일 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
     </style>
 </head>
 <body>
@@ -65,7 +80,7 @@
 <div class="top-right-auth" id="auth-panel">
     <div id="login-form">
         <input type="text" id="auth-id" class="auth-input" placeholder="아이디">
-        <input type="password" id="auth-pin" class="auth-input" placeholder="숫자 4자리" maxlength="4" pattern="\d{4}">
+        <input type="password" id="auth-pin" class="auth-input" placeholder="PIN" maxlength="4">
         <button class="auth-btn" onclick="handleAuth('login')">로그인</button>
         <button class="auth-btn" style="background:#48bb78;" onclick="handleAuth('register')">가입</button>
     </div>
@@ -77,7 +92,7 @@
 
 <div class="container">
     <div id="main-screen" class="screen active">
-        <h1>🅰️ MSC 취준 대비 알파벳-숫자 스피드 매칭 💯</h1>
+        <h1>🅰️ MSC 취준 대비 알파벳-숫자 스피드게임 💯</h1>
         <div class="btn-group">
             <button class="main-btn" onclick="switchScreen('single-setup-screen')">👤 1인 연습 모드</button>
             <button class="main-btn online-btn" onclick="openOnlineSetup()">🌐 온라인 경쟁 모드</button>
@@ -116,7 +131,7 @@
 
     <div id="online-setup-screen" class="screen">
         <h1>🌐 온라인 경쟁 모드 설정</h1>
-        <p style="font-size: 13px; color: #e53e3e; font-weight: bold; margin-top:-5px;">* 온라인 모드는 고정된 규칙으로 진행됩니다.</p>
+        <p style="font-size: 13px; color: #e53e3e; font-weight: bold; margin-top:-5px; margin-bottom: 5px;">* 온라인 모드는 고정된 규칙으로 진행됩니다.</p>
         <div class="options">
             <label>문제 유형</label>
             <select id="online-quiz-type">
@@ -142,40 +157,45 @@
     </div>
 
     <div id="game-screen" class="screen">
-        <div class="stats">
-            <div id="stat-time">00:00</div>
-            <div id="stat-progress">진행도</div>
-            <div id="stat-accuracy">100%</div>
+        <div class="game-header">
+            <div class="progress-container" id="game-progress-container">
+                <div class="progress-bar" id="game-progress-bar"></div>
+            </div>
+            <div class="stats">
+                <div id="stat-time">00:00</div>
+                <div id="stat-progress">진행도</div>
+                <div id="stat-accuracy">100%</div>
+            </div>
         </div>
         <div class="question-container" id="q-container">
             <div class="q-box"></div><div class="q-box"></div><div class="q-box"></div><div class="q-box"></div>
         </div>
-        <input type="text" id="answer-input" class="game-input" autocomplete="off" />
+        <input type="text" id="answer-input" class="game-input" autocomplete="off" placeholder="정답 입력..." />
         <div id="helper-msg" class="helper-text"></div>
         <button id="stop-btn" class="stop-btn" onclick="endGame()">그만하기 (결과 보기)</button>
     </div>
 
     <div id="result-screen" class="screen">
         <h1>게임 종료! 🎉</h1>
-        <div id="result-stats" class="record-container" style="text-align: center; font-size: 18px;"></div>
-        <button class="main-btn" style="margin-top:15px;" onclick="switchScreen('main-screen')">메인으로</button>
+        <div id="result-stats" class="record-container" style="text-align: center; font-size: 18px; line-height: 1.6;"></div>
+        <button class="main-btn" style="margin-top:20px;" onclick="switchScreen('main-screen')">메인 허브로 이동</button>
     </div>
 
     <div id="leaderboard-screen" class="screen">
         <h1>🏆 리더보드</h1>
         <div class="tabs">
-            <div class="tab active" id="tab-offline" onclick="loadLeaderboard('offline')">1인 모드 (내 기록)</div>
-            <div class="tab" id="tab-online" onclick="loadLeaderboard('online')">온라인 모드 (글로벌)</div>
+            <div class="tab active" id="tab-offline" onclick="loadLeaderboard('offline')">1인 모드 기록</div>
+            <div class="tab" id="tab-online" onclick="loadLeaderboard('online')">온라인 경쟁 기록</div>
         </div>
         <select id="lb-filter" onchange="renderLeaderboard()" style="margin-bottom: 10px;"></select>
         <div class="record-container" id="record-list">기록을 불러오는 중...</div>
-        <button class="sub-btn" style="margin-top:15px;" onclick="switchScreen('main-screen')">메인으로</button>
+        <button class="sub-btn" style="margin-top:15px;" onclick="switchScreen('main-screen')">메인으로 돌아가기</button>
     </div>
 
     <div id="user-history-screen" class="screen">
         <h1 id="history-title">개인 기록</h1>
         <div class="record-container" id="history-list"></div>
-        <button class="sub-btn" style="margin-top:15px;" onclick="switchScreen('leaderboard-screen')">뒤로 가기</button>
+        <button class="sub-btn" style="margin-top:15px;" onclick="switchScreen('leaderboard-screen')">리더보드로 돌아가기</button>
     </div>
 </div>
 
@@ -193,18 +213,21 @@
     const answerInput = document.getElementById('answer-input');
     const qBoxes = document.querySelectorAll('.q-box');
     const filterSelect = document.getElementById('lb-filter');
+    const progressBar = document.getElementById('game-progress-bar');
+    const progressContainer = document.getElementById('game-progress-container');
 
     // Helper
     const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     const switchScreen = (id) => { screens.forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
 
-    // Mode Name 포맷팅 (동적 생성을 위함)
+    // Mode Name 포맷팅
     const getModeName = (modeKey) => {
+        if (!modeKey) return "알 수 없는 모드";
         const parts = modeKey.split('_');
-        if (parts.length < 2) return modeKey;
         const typeStr = parts[0] === 'num2alpha' ? '알파벳' : '숫자';
-        if (parts[1] === 'unlimited') return `${typeStr} / 무제한 연습`;
-        return `${typeStr} / ${parts[1] === 'time' ? parts[2] + '초' : parts[2] + '개'}`;
+        if (parts[1] === 'unlimited') return `${typeStr} (무제한)`;
+        const unit = parts[1] === 'time' ? '초' : '개';
+        return `${typeStr} (${parts[2]}${unit})`;
     };
 
     // --- 1인 모드 입력란 동적 전환 ---
@@ -220,10 +243,10 @@
             container.style.display = 'block';
             if (mode === 'time') {
                 label.textContent = '시간 (초) - 30초 단위';
-                input.min = 30; input.step = 30; input.value = 30;
+                input.min = 30; input.step = 30; input.value = 30; input.placeholder = "예: 60";
             } else {
                 label.textContent = '개수 (개) - 5개 단위';
-                input.min = 5; input.step = 5; input.value = 10;
+                input.min = 5; input.step = 5; input.value = 10; input.placeholder = "예: 20";
             }
         }
     }
@@ -256,14 +279,14 @@
     async function handleAuth(action) {
         const id = document.getElementById('auth-id').value.trim();
         const pin = document.getElementById('auth-pin').value.trim();
-        if (!id || !/^\d{4}$/.test(pin)) { alert("아이디와 4자리 숫자 비밀번호를 정확히 입력하세요."); return; }
+        if (!id || !/^\d{4}$/.test(pin)) { alert("아이디와 4자리 숫자 PIN을 정확히 입력하세요."); return; }
         
         try {
             const res = await fetch('/.netlify/functions/auth', { method: 'POST', body: JSON.stringify({ action, id, pin }) });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             currentUser = id; localStorage.setItem('quizUserId', id);
-            alert(action === 'login' ? "로그인 되었습니다." : "가입 및 로그인 되었습니다.");
+            alert(action === 'login' ? "로그인 성공!" : "회원가입 및 로그인 성공!");
             updateAuthUI();
         } catch (e) { alert(e.message); }
     }
@@ -271,7 +294,7 @@
     updateAuthUI();
 
     function openOnlineSetup() {
-        if (!currentUser) { alert("온라인 모드를 즐기려면 우측 상단에서 로그인/가입을 먼저 해주세요."); return; }
+        if (!currentUser) { alert("온라인 경쟁 모드를 이용하려면 먼저 로그인해주세요."); return; }
         switchScreen('online-setup-screen');
     }
 
@@ -280,6 +303,10 @@
         isOnlineGame = isOnline;
         elapsed = attempts = corrects = 0; answerInput.value = '';
         
+        // 진행률 바 초기화
+        progressBar.style.width = '0%';
+        progressBar.className = 'progress-bar'; // 위험 색상 클래스 제거
+
         if (isOnline) {
             currentType = document.getElementById('online-quiz-type').value;
             const modeVal = document.getElementById('online-game-mode').value;
@@ -290,26 +317,41 @@
             currentMode = document.getElementById('single-game-mode').value;
             
             if (currentMode !== 'unlimited') {
-                const inputVal = parseInt(document.getElementById('single-limit-value').value);
-                const step = currentMode === 'time' ? 30 : 5;
+                limitValue = parseInt(document.getElementById('single-limit-value').value) || 30;
+                // 최소값 보장
                 const min = currentMode === 'time' ? 30 : 5;
-                // 검증 로직 (최소값 및 단위 맞추기)
-                limitValue = Math.max(min, Math.round(inputVal / step) * step);
-                document.getElementById('single-limit-value').value = limitValue; // UI 보정
+                if (limitValue < min) limitValue = min;
             } else {
-                limitValue = 0; // 무제한
+                limitValue = 0;
             }
         }
 
+        // UI 설정 (무제한 모드 멈춤 버튼, 진행률 바 표시 여부)
         document.getElementById('stop-btn').style.display = currentMode === 'unlimited' ? 'block' : 'none';
-        document.getElementById('helper-msg').textContent = currentType === 'num2alpha' ? "알파벳 4글자를 이어서 입력하세요." : "숫자를 띄어쓰기로 구분하고 Enter를 누르세요.";
+        
+        if (currentMode === 'unlimited') {
+            progressContainer.style.display = 'none';
+        } else {
+            progressContainer.style.display = 'block';
+            if (currentMode === 'time') progressBar.style.width = '100%'; // 시간 모드는 꽉 찬 상태에서 시작
+        }
+
+        document.getElementById('helper-msg').textContent = currentType === 'num2alpha' ? "알파벳 4글자를 이어서 입력하세요. (자동 채점)" : "숫자를 공백으로 구분하고 Enter를 누르세요.";
         
         switchScreen('game-screen'); generateQuestion(); updateStats(); answerInput.focus();
 
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => { 
-            elapsed++; updateStats(); 
-            if (currentMode === 'time' && elapsed >= limitValue) endGame(); 
+            elapsed++; 
+            updateStats(); 
+            // 시간 제한 모드 종료 체크 및 진행률 업데이트
+            if (currentMode === 'time') {
+                if (elapsed >= limitValue) {
+                    endGame();
+                } else {
+                    updateProgressBar();
+                }
+            }
         }, 1000);
     }
 
@@ -328,14 +370,37 @@
         document.getElementById('stat-accuracy').textContent = `정답률: ${acc}%`;
         
         if (currentMode === 'unlimited') {
-            document.getElementById('stat-time').textContent = `진행 시간: ${formatTime(elapsed)}`;
-            document.getElementById('stat-progress').textContent = `맞춘 개수: ${corrects}개`;
+            document.getElementById('stat-time').textContent = `시간: ${formatTime(elapsed)}`;
+            document.getElementById('stat-progress').textContent = `정답: ${corrects}개`;
         } else if (currentMode === 'time') {
             document.getElementById('stat-time').textContent = `남은 시간: ${formatTime(Math.max(0, limitValue - elapsed))}`;
             document.getElementById('stat-progress').textContent = `정답: ${corrects}개`;
         } else {
-            document.getElementById('stat-time').textContent = `진행 시간: ${formatTime(elapsed)}`;
+            document.getElementById('stat-time').textContent = `시간: ${formatTime(elapsed)}`;
             document.getElementById('stat-progress').textContent = `진행: ${corrects}/${limitValue}`;
+        }
+    }
+
+    // 진행률 바 업데이트 로직 추가
+    function updateProgressBar() {
+        if (currentMode === 'time') {
+            // 시간 모드: 100% -> 0%로 줄어듦
+            const remaining = limitValue - elapsed;
+            const percentage = (remaining / limitValue) * 100;
+            progressBar.style.width = `${percentage}%`;
+            
+            // 색상 변경 (위험 수위)
+            if (percentage <= 10) {
+                progressBar.className = 'progress-bar danger';
+            } else if (percentage <= 30) {
+                progressBar.className = 'progress-bar warning';
+            } else {
+                progressBar.className = 'progress-bar';
+            }
+        } else if (currentMode === 'count') {
+            // 개수 모드: 정답 맞출 때마다 증가 (0% -> 100%)
+            const percentage = (corrects / limitValue) * 100;
+            progressBar.style.width = `${percentage}%`;
         }
     }
 
@@ -351,8 +416,17 @@
 
         attempts++;
         if (isCorrect) {
-            corrects++; answerInput.classList.remove('wrong'); qBoxes.forEach(box => box.classList.add('correct-flash'));
-            setTimeout(() => { if (currentMode === 'count' && corrects >= limitValue) endGame(); else generateQuestion(); }, 150);
+            corrects++; 
+            answerInput.classList.remove('wrong'); 
+            qBoxes.forEach(box => box.classList.add('correct-flash'));
+            
+            // 개수 모드일 때 진행률 업데이트
+            if (currentMode === 'count') updateProgressBar();
+
+            setTimeout(() => { 
+                if (currentMode === 'count' && corrects >= limitValue) endGame(); 
+                else generateQuestion(); 
+            }, 150);
         } else {
             answerInput.classList.remove('wrong'); void answerInput.offsetWidth; answerInput.classList.add('wrong'); answerInput.value = ''; 
         }
@@ -363,42 +437,55 @@
     answerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
 
     async function endGame() {
-        clearInterval(timerInterval);
+        if (timerInterval) clearInterval(timerInterval); // 타이머 즉시 멈춤
+        
         const acc = attempts === 0 ? 0 : Math.round((corrects / attempts) * 100);
-        const modeKey = currentMode === 'unlimited' ? `${currentType}_unlimited` : `${currentType}_${currentMode}_${limitValue}`;
+        // 무제한 모드 결과 저장을 위한 고정 키값 설정 (limitValue 제외)
+        const modeKeyForSave = currentMode === 'unlimited' ? `${currentType}_unlimited` : `${currentType}_${currentMode}_${limitValue}`;
         
         const recordData = { 
-            modeKey, modeType: currentMode, score: corrects, time: elapsed, accuracy: acc, 
-            userId: currentUser || 'offline_user', isOnline: isOnlineGame 
+            modeKey: modeKeyForSave, modeType: currentMode, score: corrects, time: elapsed, accuracy: acc, 
+            userId: currentUser || '비회원', isOnline: isOnlineGame 
         };
 
-        // 오프라인 저장 (온라인/오프라인 모드 플레이 무관하게 로컬엔 다 남김)
+        // 로컬 카운트 모드 달성률 보정 (시간 종료 시)
+        if (currentMode === 'count' && corrects < limitValue) {
+             // 개수 모드는 다 못 채우면 시간순 리더보드에 불리하므로 기록 안 하거나 별도 처리 필요. 
+             // 여기서는 그냥 저장하되 시간 리더보드 하단에 위치하게 됨.
+        }
+
+        // 로컬 저장 (플레이 기록용)
         const localRecords = JSON.parse(localStorage.getItem('localRecords') || '[]');
         localRecords.push({...recordData, timestamp: Date.now()});
         localStorage.setItem('localRecords', JSON.stringify(localRecords));
 
-        // 온라인 연동 (온라인 경쟁 모드로 플레이 했을 때만 서버로 전송)
+        // 온라인 전송 (온라인 모드이며 로그인했을 때만, 무제한 제외)
         if (isOnlineGame && currentUser && currentMode !== 'unlimited') {
             fetch('/.netlify/functions/records', { method: 'POST', body: JSON.stringify(recordData) }).catch(console.error);
         }
 
-        let html = '';
+        // 결과 UI 구성
+        let html = `<strong>[ ${getModeName(modeKeyForSave)} ]</strong><br><br>`;
         if (currentMode === 'unlimited') {
-            html = `<div>연습 시간: <b style="color:#667eea">${formatTime(elapsed)}</b></div>
-                    <div>맞춘 개수: <b style="color:#667eea">${corrects}</b>개</div>`;
+            html += `연습 시간: <b style="color:#667eea; font-size:22px;">${formatTime(elapsed)}</b><br>
+                    맞춘 개수: <b style="color:#667eea; font-size:22px;">${corrects}</b>개<br>`;
         } else if (currentMode === 'time') {
-            html = `<div>맞춘 개수: <b style="color:#667eea">${corrects}</b>개</div>`;
+            html += `맞춘 개수: <b style="color:#667eea; font-size:24px;">${corrects}</b>개<br>`;
         } else {
-            html = `<div>소요 시간: <b style="color:#667eea">${formatTime(elapsed)}</b></div>`;
+            html += `소요 시간: <b style="color:#667eea; font-size:24px;">${formatTime(elapsed)}</b><br>`;
         }
-        html += `<div>최종 정답률: <b style="color:#667eea">${acc}%</b></div>`;
+        html += `최종 정답률: <b>${acc}%</b> (${attempts}회 시도)`;
         
         document.getElementById('result-stats').innerHTML = html; 
         switchScreen('result-screen');
     }
 
     // --- 리더보드 로직 ---
-    function openLeaderboard() { switchScreen('leaderboard-screen'); loadLeaderboard(currentLbMode); }
+    function openLeaderboard() { 
+        filterSelect.innerHTML = '<option value="">모드 선택중...</option>'; // 초기화
+        switchScreen('leaderboard-screen'); 
+        loadLeaderboard(currentLbMode); 
+    }
 
     async function loadLeaderboard(targetMode) {
         currentLbMode = targetMode;
@@ -406,83 +493,156 @@
         document.getElementById('tab-online').classList.toggle('active', targetMode === 'online');
         
         const list = document.getElementById('record-list');
-        list.innerHTML = '데이터 불러오는 중...';
+        list.innerHTML = '기록을 불러오는 중...';
 
         try {
             if (targetMode === 'offline') {
-                // 1인 모드 플레이 기록만 필터링 (온라인 모드로 플레이한 것은 제외)
+                // 1인 모드: 로컬 기록에서 온라인이 아닌 것만
                 const local = JSON.parse(localStorage.getItem('localRecords') || '[]');
                 cachedLeaderboardData = local.filter(r => !r.isOnline);
             } else {
-                const res = await fetch(`/.netlify/functions/records`); // 전체 가져와서 프론트에서 필터링
+                // 온라인 모드: 서버에서 가져옴
+                const res = await fetch(`/.netlify/functions/records`);
                 cachedLeaderboardData = await res.json();
             }
             
-            // 드롭다운 메뉴 동적 갱신
-            const uniqueKeys = [...new Set(cachedLeaderboardData.map(r => r.modeKey))];
-            filterSelect.innerHTML = '<option value="all">모든 기록 보기</option>';
-            uniqueKeys.forEach(k => {
-                filterSelect.innerHTML += `<option value="${k}">${getModeName(k)}</option>`;
-            });
+            // 데이터 수집 후 필터 드롭다운 동적 생성
+            updateFilterDropdown();
+            // 기본값 '모든 기록 보기'로 렌더링
+            renderLeaderboard(); 
 
-            renderLeaderboard();
-        } catch (e) { list.innerHTML = '서버 통신 실패'; }
+        } catch (e) { 
+            console.error(e);
+            list.innerHTML = '데이터를 불러오지 못했습니다. (서버 연결 확인)'; 
+        }
     }
 
+    // 드롭다운 업데이트 함수 분리
+    function updateFilterDropdown() {
+        // 데이터에 존재하는 유니크한 modeKey 추출
+        const uniqueKeys = [...new Set(cachedLeaderboardData.map(r => r.modeKey))];
+        
+        // 시간 모드, 개수 모드, 무제한 모드 순으로 정렬하기 위한 순서 정의
+        const typeOrder = { 'time': 1, 'count': 2, 'unlimited': 3 };
+        uniqueKeys.sort((a, b) => {
+            const partsA = a.split('_'); const partsB = b.split('_');
+            if (typeOrder[partsA[1]] !== typeOrder[partsB[1]]) return typeOrder[partsA[1]] - typeOrder[partsB[1]];
+            // 같은 모드 타입 내에서는 제한값(시간/개수) 오름차순
+            return parseInt(partsA[2] || 0) - parseInt(partsB[2] || 0);
+        });
+
+        filterSelect.innerHTML = '<option value="all">🌐 모든 기록 보기 (최신순)</option>';
+        if (uniqueKeys.length === 0) {
+             filterSelect.innerHTML = '<option value="">플레이 기록 없음</option>';
+             return;
+        }
+
+        uniqueKeys.forEach(k => {
+            if(!k) return;
+            filterSelect.innerHTML += `<option value="${k}">${getModeName(k)}</option>`;
+        });
+        filterSelect.value = "all"; // 기본값 설정
+    }
+
+    // 리더보드 렌더링 함수 (버그 수정됨)
     function renderLeaderboard() {
         const list = document.getElementById('record-list');
         const filterVal = filterSelect.value; 
         
-        let displayData = filterVal === 'all' 
-            ? cachedLeaderboardData 
-            : cachedLeaderboardData.filter(r => r.modeKey === filterVal);
+        // 1. 데이터 필터링
+        let displayData = (filterVal === 'all' || !filterVal) 
+            ? [...cachedLeaderboardData] // 전체 보기 (복사본 사용)
+            : cachedLeaderboardData.filter(r => r.modeKey === filterVal); // 특정 모드
 
-        if(displayData.length === 0) { list.innerHTML = '기록이 없습니다.'; return; }
+        if(displayData.length === 0) { list.innerHTML = '<div style="text-align:center; padding: 20px 0; color: #718096;">기록이 없습니다.</div>'; return; }
 
-        // 필터를 선택했을 때 랭킹 정렬
-        if (filterVal !== 'all') {
-            const isTime = filterVal.includes('time');
-            const isUnlimited = filterVal.includes('unlimited');
-            displayData.sort((a,b) => {
-                if (isUnlimited) return b.score - a.score; // 무제한은 많이 맞춘 순
-                return isTime ? b.score - a.score : a.time - b.time;
-            });
+        // 2. 데이터 정렬
+        if (filterVal === 'all' || !filterVal) {
+            // '모든 기록 보기'일 때는 무조건 최신순
+            displayData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         } else {
-            // 전체 보기일 때는 최신순
-            displayData.sort((a,b) => b.timestamp - a.timestamp);
+            // 특정 모드 선택 시 순위 규정에 맞게 정렬
+            const isUnlimited = filterVal.includes('unlimited');
+            const isTimeLimit = filterVal.includes('_time_'); // 시간 제한 모드
+
+            displayData.sort((a, b) => {
+                if (isUnlimited) {
+                    // 무제한: 많이 맞춘 순 (점수 내림차순)
+                    return b.score - a.score;
+                } else if (isTimeLimit) {
+                    // 시간 제한: 많이 맞춘 순 (점수 내림차순)
+                    return b.score - a.score;
+                } else {
+                    // 개수 제한: 빨리 푼 순 (시간 오름차순)
+                    return a.time - b.time;
+                }
+            });
         }
 
+        // 3. HTML 생성 및 출력
         list.innerHTML = displayData.map((r, i) => {
-            const isTime = r.modeType === 'time' || r.modeType === 'unlimited';
-            const valueStr = isTime ? `${r.score}개` : `${formatTime(r.time)}`;
-            const rankStr = filterVal === 'all' ? `<span style="font-size:11px; color:#a0aec0;">[${getModeName(r.modeKey)}]</span>` : `<b>${i+1}위.</b>`;
+            const isUnlimited = r.modeType === 'unlimited';
+            const isTimeLimit = r.modeType === 'time';
             
+            // 표시할 기록 값 설정
+            let valueStr = '';
+            if (isUnlimited) valueStr = `${r.score}개 (${formatTime(r.time)})`;
+            else if (isTimeLimit) valueStr = `${r.score}개`;
+            else valueStr = formatTime(r.time);
+
+            // 등수 또는 모드명 표시 (전체 보기일 땐 모드명 표시)
+            const rankOrMode = (filterVal === 'all' || !filterVal)
+                ? `<span style="font-size:11px; color:#718096; background:#edf2f7; padding:2px 5px; border-radius:4px; margin-right:5px;">${getModeName(r.modeKey)}</span>`
+                : `<b style="color:#667eea; font-size:16px; margin-right:8px;">${i+1}위</b>`;
+            
+            // 유저 아이디 (온라인 모드이며 비회원이 아닐 때만 링크)
+            const userDisplay = (currentLbMode === 'online' && r.userId !== '비회원')
+                ? `<span class="user-id-link" onclick="viewUserHistory('${r.userId}')">${r.userId}</span>`
+                : `<span style="font-weight:600; color:#4a5568;">${r.userId === 'offline_user' ? '나' : r.userId}</span>`;
+
+            const dateStr = filterVal === 'all' ? `<div style="font-size:10px; color:#a0aec0; margin-top:2px;">${new Date(r.timestamp).toLocaleDateString()}</div>` : '';
+
             return `
             <div class="record-item">
-                <div>
-                    ${rankStr} ${currentLbMode === 'online' ? `<span class="user-id-link" onclick="viewUserHistory('${r.userId}')">${r.userId}</span>` : '내 기록'} 
-                    <span style="color:#718096; font-size:12px;"> (정답률 ${r.accuracy}%)</span>
+                <div style="display:flex; align-items:center;">
+                    ${rankOrMode}
+                    <div>
+                        ${userDisplay} 
+                        <span style="color:#a0aec0; font-size:12px;"> (정답률 ${r.accuracy}%)</span>
+                        ${dateStr}
+                    </div>
                 </div>
-                <div style="font-weight:bold; color:#2c3e50;">${valueStr}</div>
+                <div style="font-weight:800; color:#2d3748; font-size:16px;">${valueStr}</div>
             </div>`;
         }).join('');
     }
 
+    // 유저별 기록 팝업 (온라인)
     async function viewUserHistory(userId) {
         switchScreen('user-history-screen');
-        document.getElementById('history-title').textContent = `🎮 ${userId}님의 기록`;
+        document.getElementById('history-title').textContent = `🎮 ${userId}님의 온라인 기록`;
         const list = document.getElementById('history-list'); list.innerHTML = '불러오는 중...';
 
         try {
             const res = await fetch(`/.netlify/functions/records?userId=${userId}`); const data = await res.json();
-            if(data.length === 0) { list.innerHTML = '기록이 없습니다.'; return; }
+            if(data.length === 0) { list.innerHTML = '<div style="text-align:center; padding:20px;">기록이 없습니다.</div>'; return; }
+            
+            // 최신순 정렬
+            data.sort((a,b) => b.timestamp - a.timestamp);
+
             list.innerHTML = data.map(r => `
-                <div class="record-item" style="flex-direction:column; align-items:flex-start;">
-                    <div style="font-size:12px; color:#a0aec0;">${new Date(r.timestamp).toLocaleString()}</div>
-                    <div><b>[${getModeName(r.modeKey)}]</b> ${r.modeType === 'time' ? `${r.score}개` : `${formatTime(r.time)} 소요`} (정답률 ${r.accuracy}%)</div>
+                <div class="record-item" style="flex-direction:column; align-items:flex-start; gap:3px;">
+                    <div style="font-size:11px; color:#a0aec0;">${new Date(r.timestamp).toLocaleString('ko-KR')}</div>
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                        <b style="color:#4a5568;">[${getModeName(r.modeKey)}]</b> 
+                        <span style="font-weight:700; color:#2d3748;">
+                            ${r.modeType === 'time' ? `${r.score}개` : `${formatTime(r.time)}`}
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color:#718096;">정답률 ${r.accuracy}% / 소요시간 ${formatTime(r.time)}</div>
                 </div>
             `).join('');
-        } catch (e) { list.innerHTML = '기록을 불러오지 못했습니다.'; }
+        } catch (e) { list.innerHTML = '<div style="text-align:center; padding:20px;">기록을 불러오지 못했습니다.</div>'; }
     }
 </script>
 </body>
